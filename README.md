@@ -1,6 +1,6 @@
-Vercel URL: https://pareekshamitra.vercel.app/
 
-=======
+# 🔗 Vercel URL: https://pareekshamitra.vercel.app/
+
 # 🎯 PareekshaMitra — AI Exam Companion
 
 An AI-powered exam preparation app for Indian competitive exam aspirants — UPSC, SSC CGL, IBPS PO, NEET, JEE, RRB and more. Built with React, Tailwind CSS, and Claude AI.
