@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# pareekshamitra
+Vercel URL: https://pareekshamitra.vercel.app/
+
 =======
 # 🎯 PareekshaMitra — AI Exam Companion
 
