@@ -1,7 +1,7 @@
 import React from "react";
 import {
   LayoutDashboard, Brain, Newspaper, PenLine, MessageCircle,
-  BookOpen, Trophy, Settings, ChevronRight, Zap
+  BookOpen, Trophy, Settings, ChevronRight, Zap, LogOut
 } from "lucide-react";
 
 const NAV = [
@@ -13,6 +13,11 @@ const NAV = [
   { id: "pyq",            icon: BookOpen,        label: "PYQ Solver" },
   { id: "leaderboard",    icon: Trophy,          label: "Leaderboard" },
 ];
+
+function handleLogout() {
+  localStorage.clear();
+  window.location.href = "/";
+}
 
 export default function Sidebar({ activePage, onNavigate, userProfile }) {
   return (
@@ -65,8 +70,16 @@ export default function Sidebar({ activePage, onNavigate, userProfile }) {
         })}
       </nav>
 
-      {/* Settings */}
-      <div className="p-3 border-t border-white/5">
+      {/* Logout + Settings */}
+      <div className="p-3 border-t border-white/5 space-y-0.5">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group text-white/50 hover:text-red-400 hover:bg-red-500/8"
+        >
+          <LogOut size={17} className="text-white/30 group-hover:text-red-400" />
+          <span className="font-medium">Logout</span>
+        </button>
+
         <button
           onClick={() => onNavigate("settings")}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group

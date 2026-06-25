@@ -57,7 +57,12 @@ export default function OnboardingModal({ onComplete }) {
                 onKeyDown={e => e.key === "Enter" && next()}
               />
             </div>
-            <button onClick={next} className="btn-primary w-full flex items-center justify-center gap-2">
+            <button 
+              onClick={next} 
+              disabled={!name.trim()}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all
+                ${name.trim() ? "btn-primary" : "bg-dark-600 text-white/20 cursor-not-allowed"}`}
+            >
               Get Started <ChevronRight size={16} />
             </button>
           </div>
@@ -153,7 +158,12 @@ export default function OnboardingModal({ onComplete }) {
                 </div>
               ))}
             </div>
-            <button onClick={finish} className="btn-primary w-full">
+            <button 
+              onClick={finish} 
+              disabled={!exam}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all
+                ${exam ? "btn-primary" : "bg-dark-600 text-white/20 cursor-not-allowed"}`}
+            >
               Start Preparing 🚀
             </button>
           </div>
