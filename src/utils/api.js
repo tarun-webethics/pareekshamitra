@@ -1,12 +1,33 @@
-
-
-
-// ─── Claude API Utility ───────────────────────────────────────────────────────
-// All calls to Anthropic's API live here. The user's API key is stored in
-// localStorage under "pm_api_key". In production, move this to a backend proxy.
+// ─── AI API Utility (Ollama Local & Claude API) ───────────────────────────────
 
 const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-20250514";
+const CLAUDE_MODEL = "claude-sonnet-4-20250514";
+
+// ─── Local Storage Configuration Getters & Setters ───────────────────────────
+
+export function getAiProvider() {
+  return localStorage.getItem("pm_ai_provider") || "ollama";
+}
+
+export function setAiProvider(provider) {
+  localStorage.setItem("pm_ai_provider", provider);
+}
+
+export function getOllamaUrl() {
+  return localStorage.getItem("pm_ollama_url") || "http://localhost:11434";
+}
+
+export function setOllamaUrl(url) {
+  localStorage.setItem("pm_ollama_url", url);
+}
+
+export function getOllamaModel() {
+  return localStorage.getItem("pm_ollama_model") || "llama3.2";
+}
+
+export function setOllamaModel(model) {
+  localStorage.setItem("pm_ollama_model", model);
+}
 
 export function getApiKey() {
   return localStorage.getItem("pm_api_key") || "";
@@ -17,10 +38,147 @@ export function setApiKey(key) {
 }
 
 /**
- * Core fetch wrapper — streams or returns full message.
- * @param {string} systemPrompt
- * @param {Array}  messages  [{role, content}]
- * @param {object} opts       { maxTokens, onChunk }
+ * Pings Ollama server to check connection and fetch available models.
+ */
+export async function testOllamaConnection(customUrl) {
+  const baseUrl = (customUrl || getOllamaUrl()).replace(/\/+$/, "");
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+  try {
+    const res = await fetch(`${baseUrl}/api/tags`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      return { ok: false, models: [], error: `Ollama returned HTTP status ${res.status}` };
+    }
+    const data = await res.json();
+    const models = data.models?.map((m) => m.name) || [];
+
+    if (models.length === 0) {
+      return {
+        ok: false,
+        isNoModels: true,
+        models: [],
+        error: "Ollama is running, but NO models are installed yet. Run 'ollama pull llama3.2' in terminal.",
+      };
+    }
+
+    return { ok: true, models };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      return { ok: false, models: [], error: "Connection timed out. Ensure Ollama is running." };
+    }
+    return {
+      ok: false,
+      models: [],
+      error: "Could not connect to Ollama. Check URL & ensure CORS (OLLAMA_ORIGINS=\"*\") is enabled.",
+    };
+  }
+}
+
+/**
+ * Call Ollama API (/api/chat)
+ */
+export async function callOllama(systemPrompt, messages, opts = {}) {
+  const { onChunk } = opts;
+  const baseUrl = getOllamaUrl().replace(/\/+$/, "");
+  const model = getOllamaModel();
+
+  const formattedMessages = [];
+  if (systemPrompt) {
+    formattedMessages.push({ role: "system", content: systemPrompt });
+  }
+  formattedMessages.push(...messages);
+
+  const body = {
+    model,
+    messages: formattedMessages,
+    stream: !!onChunk,
+  };
+
+  let res;
+  try {
+    res = await fetch(`${baseUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (fetchErr) {
+    throw new Error(
+      `Failed to connect to Ollama at ${baseUrl}. Ensure Ollama is running and OLLAMA_ORIGINS="*" is configured.`
+    );
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    let msg = err?.error || `Ollama API error ${res.status}`;
+
+    if (msg.includes("not found")) {
+      try {
+        const tagsRes = await fetch(`${baseUrl}/api/tags`);
+        const tagsData = await tagsRes.json();
+        const available = tagsData.models?.map((m) => m.name) || [];
+        if (available.length === 0) {
+          msg = `NO models installed in Ollama! Open terminal and run: 'ollama pull llama3.2'`;
+        } else {
+          msg = `Model '${model}' is not installed in Ollama. Installed model(s): [${available.join(", ")}]. Select one of these in Settings!`;
+        }
+      } catch {
+        msg = `Model '${model}' not found in Ollama. Run 'ollama pull ${model}' in your terminal.`;
+      }
+    }
+    throw new Error(msg);
+  }
+
+  // ── Streaming path (NDJSON) ──
+  if (onChunk) {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.message?.content) {
+            fullText += parsed.message.content;
+            onChunk(parsed.message.content, fullText);
+          }
+        } catch {}
+      }
+    }
+    if (buffer.trim()) {
+      try {
+        const parsed = JSON.parse(buffer);
+        if (parsed.message?.content) {
+          fullText += parsed.message.content;
+          onChunk(parsed.message.content, fullText);
+        }
+      } catch {}
+    }
+    return fullText;
+  }
+
+  // ── Non-streaming path ──
+  const data = await res.json();
+  return data.message?.content || "";
+}
+
+/**
+ * Call Anthropic Claude API
  */
 export async function callClaude(systemPrompt, messages, opts = {}) {
   const { maxTokens = 1500, onChunk } = opts;
@@ -29,7 +187,7 @@ export async function callClaude(systemPrompt, messages, opts = {}) {
   if (!apiKey) throw new Error("NO_API_KEY");
 
   const body = {
-    model: MODEL,
+    model: CLAUDE_MODEL,
     max_tokens: maxTokens,
     system: systemPrompt,
     messages,
@@ -64,7 +222,7 @@ export async function callClaude(systemPrompt, messages, opts = {}) {
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
-      buffer = lines.pop();
+      buffer = lines.pop() || "";
 
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
@@ -87,24 +245,62 @@ export async function callClaude(systemPrompt, messages, opts = {}) {
   return data.content?.[0]?.text || "";
 }
 
-// ─── Specialised helpers ──────────────────────────────────────────────────────
+/**
+ * Master Dispatcher
+ */
+export async function callAI(systemPrompt, messages, opts = {}) {
+  const provider = getAiProvider();
+  if (provider === "ollama") {
+    return callOllama(systemPrompt, messages, opts);
+  }
+  return callClaude(systemPrompt, messages, opts);
+}
+
+/**
+ * Helper to extract JSON objects/arrays from LLM response safely
+ */
+function extractJSON(text) {
+  if (!text) throw new Error("Empty response from AI");
+  const cleaned = text.replace(/```json|```/gi, "").trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {}
+
+  const arrayMatch = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/);
+  if (arrayMatch) {
+    try {
+      return JSON.parse(arrayMatch[0]);
+    } catch {}
+  }
+
+  const objMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objMatch) {
+    try {
+      return JSON.parse(objMatch[0]);
+    } catch {}
+  }
+
+  throw new Error("Failed to parse JSON structure from AI output.");
+}
+
+// ─── Specialised Application Helpers ─────────────────────────────────────────
 
 export async function generateQuiz({ exam, subject, topic, difficulty, count = 5 }) {
   const system = `You are an expert Indian competitive exam question setter. 
 Generate exactly ${count} MCQ questions in strict JSON format.
-Always respond with ONLY a JSON array — no markdown, no explanation.
+Always respond with ONLY a JSON array — no preamble, no markdown, no explanation outside JSON.
 Each item: { "id": number, "question": string, "options": [A,B,C,D], "correct": "A"|"B"|"C"|"D", "explanation": string, "difficulty": "Easy"|"Medium"|"Hard" }`;
 
   const userMsg = `Generate ${count} ${difficulty || "Mixed"} difficulty MCQ questions for ${exam} exam.
 Subject: ${subject}. Topic: ${topic || "General"}.
 Focus on conceptual accuracy. Explanations must be detailed (3-4 lines).`;
 
-  const raw = await callClaude(system, [{ role: "user", content: userMsg }], { maxTokens: 2500 });
+  const raw = await callAI(system, [{ role: "user", content: userMsg }], { maxTokens: 2500 });
   try {
-    const clean = raw.replace(/```json|```/g, "").trim();
-    return JSON.parse(clean);
-  } catch {
-    throw new Error("Failed to parse quiz response. Please try again.");
+    return extractJSON(raw);
+  } catch (e) {
+    throw new Error(e.message || "Failed to parse quiz response. Please try again.");
   }
 }
 
@@ -118,23 +314,23 @@ Standard explanation: ${explanation}
 
 Explain WHY the correct answer is right in simple terms. If student was wrong, gently explain their mistake.`;
 
-  return callClaude(system, [{ role: "user", content: msg }], { maxTokens: 400 });
+  return callAI(system, [{ role: "user", content: msg }], { maxTokens: 400 });
 }
 
 export async function generateCurrentAffairs({ date, topics }) {
   const system = `You are a current affairs analyst focused on Indian competitive exams (UPSC/SSC/Banking).
-Format: Return JSON array of news items. No markdown fences.
+Format: Return JSON array of news items. No markdown fences or intro text.
 Each item: { "title": string, "summary": string (2-3 sentences), "examRelevance": string, "tags": string[], "importanceScore": 1-5 }`;
 
   const msg = `Generate 8 important current affairs items relevant for ${topics?.join(", ") || "UPSC, SSC, Banking"} exam preparation.
 Focus on: Government schemes, economy, international relations, science & tech, environment, awards.
 Make them specific, factual, and exam-focused.`;
 
-  const raw = await callClaude(system, [{ role: "user", content: msg }], { maxTokens: 2000 });
+  const raw = await callAI(system, [{ role: "user", content: msg }], { maxTokens: 2000 });
   try {
-    return JSON.parse(raw.replace(/```json|```/g, "").trim());
-  } catch {
-    throw new Error("Failed to parse current affairs. Please try again.");
+    return extractJSON(raw);
+  } catch (e) {
+    throw new Error(e.message || "Failed to parse current affairs. Please try again.");
   }
 }
 
@@ -153,7 +349,7 @@ Student's Answer: ${userAnswer}
 
 Evaluate this answer strictly. Score out of 10. Be specific about what's missing.`;
 
-  return callClaude(system, [{ role: "user", content: msg }], { maxTokens: 600, onChunk });
+  return callAI(system, [{ role: "user", content: msg }], { maxTokens: 600, onChunk });
 }
 
 export async function chatWithTutor({ messages, exam, subject }) {
@@ -165,5 +361,5 @@ You specialise in ${exam || "all Indian exams"} — UPSC, SSC CGL, IBPS PO, NEET
 - Be encouraging and motivating
 - If asked for resources, suggest free ones (NCERT, PRS India, PIB, etc.)`;
 
-  return callClaude(system, messages, { maxTokens: 800 });
+  return callAI(system, messages, { maxTokens: 800 });
 }

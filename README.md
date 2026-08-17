@@ -1,9 +1,6 @@
-<<<<<<< HEAD
-# pareekshamitra
-=======
-# 🎯 PareekshaMitra — AI Exam Companion
+# 🎯 PareekshaMitra — Local AI Exam Companion
 
-An AI-powered exam preparation app for Indian competitive exam aspirants — UPSC, SSC CGL, IBPS PO, NEET, JEE, RRB and more. Built with React, Tailwind CSS, and Claude AI.
+An AI-powered exam preparation app for Indian competitive exam aspirants — UPSC, SSC CGL, IBPS PO, NEET, JEE, RRB and more. Built with React, Tailwind CSS, local **Ollama** AI models (`llama3.2`, `mistral`, `qwen2.5`, etc.), and optional Anthropic Claude API support.
 
 ---
 
@@ -11,6 +8,7 @@ An AI-powered exam preparation app for Indian competitive exam aspirants — UPS
 
 | Feature | Description |
 |---|---|
+| 🦙 **Local AI Powered** | Runs completely offline with local Ollama models or Claude API |
 | 🧠 **Smart Quiz** | AI-generated adaptive MCQs for any exam, subject, topic & difficulty |
 | 📰 **Current Affairs** | Daily AI-curated digest with exam relevance tags |
 | ✍️ **Answer Writing Coach** | AI scores your answers on UPSC/exam criteria + model answer |
@@ -21,33 +19,34 @@ An AI-powered exam preparation app for Indian competitive exam aspirants — UPS
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start with Ollama (Local AI)
 
 ### 1. Prerequisites
 - Node.js 18+ and npm
-- An Anthropic API key from [console.anthropic.com](https://console.anthropic.com)
+- [Ollama](https://ollama.com) installed on your system
 
-### 2. Install dependencies
+### 2. Pull a local AI model & start Ollama with CORS
+```bash
+# Pull model (e.g. llama3.2, mistral, qwen2.5, or gemma2)
+ollama pull llama3.2
+
+# Start Ollama with CORS enabled (required for browser access)
+OLLAMA_ORIGINS="*" ollama serve
+```
+
+### 3. Install dependencies & start PareekshaMitra
 
 ```bash
 cd pareekshamitra
 npm install
-```
-
-### 3. Start development server
-
-```bash
 npm start
 ```
 
 Opens at `http://localhost:3000`
 
-### 4. Set your API key
+### 4. Configure AI Engine
 
-On first launch, the onboarding wizard will ask for your Anthropic API key.
-You can also set/change it in **Settings** at any time.
-
-> ⚠️ **Note:** The API key is stored in browser localStorage. For production, proxy all Claude API calls through a backend server to keep the key secure.
+On first launch, select **Local Ollama** (default: `http://localhost:11434` with model `llama3.2`). Click **Test Connection** to verify. You can also switch to **Claude API** or change Ollama models anytime in **Settings**.
 
 ---
 
@@ -56,7 +55,7 @@ You can also set/change it in **Settings** at any time.
 ```
 pareekshamitra/
 ├── public/
-│   └── index.html              # HTML entry point (Google Fonts loaded here)
+│   └── index.html              # HTML entry point
 ├── src/
 │   ├── App.jsx                 # Root: routing, layout, state
 │   ├── index.js                # React DOM mount
@@ -65,7 +64,7 @@ pareekshamitra/
 │   ├── components/
 │   │   ├── Sidebar.jsx         # Desktop sidebar navigation
 │   │   ├── MobileNav.jsx       # Mobile bottom navigation
-│   │   └── OnboardingModal.jsx # First-launch onboarding wizard
+│   │   └── OnboardingModal.jsx # First-launch onboarding wizard (Ollama/Claude selector)
 │   │
 │   ├── pages/
 │   │   ├── Dashboard.jsx       # Home with stats, quick actions
@@ -75,13 +74,13 @@ pareekshamitra/
 │   │   ├── Tutor.jsx           # Real-time AI chat tutor
 │   │   ├── PYQSolver.jsx       # Past year question explainer
 │   │   ├── Leaderboard.jsx     # Weekly rankings
-│   │   └── Settings.jsx        # API key + profile settings
+│   │   └── Settings.jsx        # AI provider config (Ollama URL/Model, Claude Key)
 │   │
 │   ├── hooks/
 │   │   └── useLocalStorage.js  # Persistent state hook
 │   │
 │   ├── utils/
-│   │   └── api.js              # All Claude API calls (quiz, tutor, evaluation, etc.)
+│   │   └── api.js              # Ollama (/api/chat) & Claude API callers + JSON parser
 │   │
 │   └── data/
 │       └── exams.js            # Exam list, subjects, color config
@@ -107,23 +106,6 @@ pareekshamitra/
 
 ---
 
-## 🔑 API Key Security
-
-In the current setup, the Claude API is called directly from the browser. This is fine for personal use and development. For production deployment:
-
-1. Create a backend proxy (Node.js/Express or Next.js API route)
-2. Store the API key in server environment variables
-3. Route all Claude calls through your backend
-
----
-
-## 📱 Responsive Design
-
-- **Desktop (≥1024px):** Full sidebar + main content layout
-- **Mobile (<1024px):** Top bar + bottom tab navigation
-
----
-
 ## 🧩 Adding New Exams
 
 Edit `src/data/exams.js` and add a new entry to the `EXAMS` array:
@@ -140,8 +122,6 @@ Edit `src/data/exams.js` and add a new entry to the `EXAMS` array:
 }
 ```
 
-The exam will automatically appear in Quiz, Settings, Leaderboard, and all other pages.
-
 ---
 
 ## 🌐 Deployment
@@ -155,4 +135,3 @@ Deploy the `build/` folder to Vercel, Netlify, or any static host.
 ---
 
 Built with ❤️ for India's 20 million+ exam aspirants.
->>>>>>> recovery-branch

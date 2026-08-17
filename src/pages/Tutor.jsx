@@ -68,7 +68,7 @@ export default function Tutor({ userProfile }) {
     } catch (e) {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: `Sorry, I encountered an error: ${e.message}. Please check your API key in Settings.`
+        content: `Sorry, I encountered an error: ${e.message}`
       }]);
     }
     setLoading(false);
