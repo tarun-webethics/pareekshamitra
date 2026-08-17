@@ -1,4 +1,10 @@
-# 🎯 PareekshaMitra — Local AI Exam Companion
+# 🎯 PareekshaMitra — AI Exam Companion
+
+# Marketing Social Website - https://pathfinder-pareeksha.lovable.app/
+
+---
+
+# 🔗 Vercel URL: https://pareekshamitra.vercel.app/
 
 An AI-powered exam preparation app for Indian competitive exam aspirants — UPSC, SSC CGL, IBPS PO, NEET, JEE, RRB and more. Built with React, Tailwind CSS, local **Ollama** AI models (`llama3.2`, `mistral`, `qwen2.5`, etc.), and optional Anthropic Claude API support.
 
