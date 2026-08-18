@@ -61,17 +61,23 @@ export default function Quiz({ userProfile, onStatsUpdate }) {
     const q = questions[current];
     setAnswers(prev => ({ ...prev, [current]: selected }));
 
+    const optLabels = ["A", "B", "C", "D"];
+    const correctIdx = optLabels.indexOf(q.correct);
+    const userIdx = optLabels.indexOf(selected);
+    const correctText = correctIdx !== -1 ? q.options[correctIdx] : q.correct;
+    const userText = userIdx !== -1 ? q.options[userIdx] : selected;
+
     // Fetch AI explanation
     setLoadingExp(true);
     try {
       const exp = await explainAnswer({
         question: q.question,
-        correct: q.options[q.correct.charCodeAt(0) - 65],
-        userAnswer: q.options[selected.charCodeAt(0) - 65],
+        correct: correctText,
+        userAnswer: userText,
         explanation: q.explanation,
       });
       setExplanation(exp);
-    } catch {}
+    } catch { }
     setLoadingExp(false);
   };
 
@@ -238,6 +244,10 @@ export default function Quiz({ userProfile, onStatsUpdate }) {
         {questions.map((q, i) => {
           const userAns = answers[i];
           const isCorrect = userAns === q.correct;
+          const correctIdx = optLabels.indexOf(q.correct);
+          const userIdx = optLabels.indexOf(userAns);
+          const correctText = correctIdx !== -1 ? q.options[correctIdx] : q.correct;
+          const userText = userIdx !== -1 ? q.options[userIdx] : userAns;
           return (
             <div key={i} className={`card border ${isCorrect ? "border-emerald-500/20" : "border-red-500/20"}`}>
               <div className="flex items-start gap-3">
@@ -248,8 +258,8 @@ export default function Quiz({ userProfile, onStatsUpdate }) {
                 <div>
                   <p className="text-sm text-white/80">{q.question}</p>
                   <p className="text-xs text-white/40 mt-1">
-                    Correct: <span className="text-emerald-400">{q.correct}. {q.options[q.correct.charCodeAt(0)-65]}</span>
-                    {!isCorrect && <> · Your answer: <span className="text-red-400">{userAns}. {q.options[userAns?.charCodeAt(0)-65]}</span></>}
+                    Correct: <span className="text-emerald-400">{q.correct}. {correctText}</span>
+                    {!isCorrect && <> · Your answer: <span className="text-red-400">{userAns}. {userText}</span></>}
                   </p>
                 </div>
               </div>
@@ -334,17 +344,17 @@ export default function Quiz({ userProfile, onStatsUpdate }) {
       {/* CTA */}
       {!revealed
         ? <button
-            onClick={handleReveal}
-            disabled={!selected}
-            className={`w-full py-3 rounded-xl font-medium text-sm transition-all
+          onClick={handleReveal}
+          disabled={!selected}
+          className={`w-full py-3 rounded-xl font-medium text-sm transition-all
               ${selected ? "btn-primary" : "bg-dark-600 text-white/20 cursor-not-allowed"}`}
-          >
-            Check Answer
-          </button>
+        >
+          Check Answer
+        </button>
         : <button onClick={handleNext} className="btn-primary w-full flex items-center justify-center gap-2">
-            {current < questions.length - 1 ? "Next Question" : "See Results"}
-            <ChevronRight size={16} />
-          </button>
+          {current < questions.length - 1 ? "Next Question" : "See Results"}
+          <ChevronRight size={16} />
+        </button>
       }
     </div>
   );

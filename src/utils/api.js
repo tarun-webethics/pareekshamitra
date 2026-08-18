@@ -184,7 +184,7 @@ export async function callClaude(systemPrompt, messages, opts = {}) {
   const { maxTokens = 1500, onChunk } = opts;
   const apiKey = getApiKey();
 
-  if (!apiKey) throw new Error("NO_API_KEY");
+  if (!apiKey) throw new Error("No Claude API key configured. Please enter your API key in Settings, or switch AI Provider to Ollama.");
 
   const body = {
     model: CLAUDE_MODEL,
@@ -284,21 +284,92 @@ function extractJSON(text) {
   throw new Error("Failed to parse JSON structure from AI output.");
 }
 
+/**
+ * Normalizes question JSON returned from LLMs into a standardized format.
+ * Ensures options are clean strings and `correct` is strictly "A", "B", "C", or "D".
+ */
+export function normalizeQuestion(q, index = 0) {
+  const labels = ["A", "B", "C", "D"];
+
+  let rawOptions = Array.isArray(q?.options) ? q.options : [];
+  let options = rawOptions.map(opt => {
+    let s = String(opt || "").trim();
+    return s.replace(/^[A-Da-d][.):\s]\s*/, "").trim();
+  });
+
+  while (options.length < 4) {
+    options.push(`Option ${labels[options.length]}`);
+  }
+  options = options.slice(0, 4);
+
+  let correctLabel = "A";
+  const rawCorrect = String(q?.correct ?? "").trim();
+
+  if (rawCorrect) {
+    const uppercaseCorrect = rawCorrect.toUpperCase();
+
+    if (labels.includes(uppercaseCorrect)) {
+      correctLabel = uppercaseCorrect;
+    } else if (/^[0-3]$/.test(rawCorrect)) {
+      correctLabel = labels[parseInt(rawCorrect, 10)];
+    } else if (/^[1-4]$/.test(rawCorrect)) {
+      correctLabel = labels[parseInt(rawCorrect, 10) - 1];
+    } else {
+      const prefixMatch = rawCorrect.match(/^(?:OPTION\s*|ANS:\s*|ANSWER:\s*)?([A-D])[.):\s]/i);
+      if (prefixMatch && prefixMatch[1]) {
+        correctLabel = prefixMatch[1].toUpperCase();
+      } else {
+        const norm = (str) => String(str).toLowerCase().replace(/[^a-z0-9]/g, "");
+        const targetNorm = norm(rawCorrect);
+
+        let foundIdx = options.findIndex(opt => norm(opt) === targetNorm);
+
+        if (foundIdx === -1 && targetNorm.length > 0) {
+          foundIdx = options.findIndex(opt => {
+            const optNorm = norm(opt);
+            return (optNorm.length > 0 && targetNorm.includes(optNorm)) || (targetNorm.length > 0 && optNorm.includes(targetNorm));
+          });
+        }
+
+        if (foundIdx !== -1) {
+          correctLabel = labels[foundIdx];
+        } else {
+          const firstChar = uppercaseCorrect.charAt(0);
+          if (labels.includes(firstChar)) {
+            correctLabel = firstChar;
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    id: q?.id || index + 1,
+    question: q?.question || "Question",
+    options,
+    correct: correctLabel,
+    explanation: q?.explanation || "",
+    difficulty: q?.difficulty || "Medium",
+  };
+}
+
 // ─── Specialised Application Helpers ─────────────────────────────────────────
 
 export async function generateQuiz({ exam, subject, topic, difficulty, count = 5 }) {
   const system = `You are an expert Indian competitive exam question setter. 
 Generate exactly ${count} MCQ questions in strict JSON format.
 Always respond with ONLY a JSON array — no preamble, no markdown, no explanation outside JSON.
-Each item: { "id": number, "question": string, "options": [A,B,C,D], "correct": "A"|"B"|"C"|"D", "explanation": string, "difficulty": "Easy"|"Medium"|"Hard" }`;
+Each item: { "id": number, "question": string, "options": [string, string, string, string], "correct": "A"|"B"|"C"|"D", "explanation": string, "difficulty": "Easy"|"Medium"|"Hard" }`;
 
   const userMsg = `Generate ${count} ${difficulty || "Mixed"} difficulty MCQ questions for ${exam} exam.
 Subject: ${subject}. Topic: ${topic || "General"}.
-Focus on conceptual accuracy. Explanations must be detailed (3-4 lines).`;
+Focus on conceptual accuracy. Explanations must be detailed (3-4 lines). Make sure "correct" is strictly one of "A", "B", "C", or "D".`;
 
   const raw = await callAI(system, [{ role: "user", content: userMsg }], { maxTokens: 2500 });
   try {
-    return extractJSON(raw);
+    const parsed = extractJSON(raw);
+    const questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.data || []);
+    return questions.map((q, idx) => normalizeQuestion(q, idx));
   } catch (e) {
     throw new Error(e.message || "Failed to parse quiz response. Please try again.");
   }

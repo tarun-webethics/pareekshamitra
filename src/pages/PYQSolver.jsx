@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, Send, Loader2, AlertCircle, ChevronDown } from "lucide-react";
-import { callClaude } from "../utils/api";
+import { callAI } from "../utils/api";
 import { EXAMS } from "../data/exams";
 
 const SAMPLE_PYQS = {
@@ -39,7 +39,7 @@ export default function PYQSolver({ userProfile }) {
 Format with clear sections. Use **bold** for key terms.`;
 
     try {
-      const res = await callClaude(system, [{ role: "user", content: question }], { maxTokens: 800 });
+      const res = await callAI(system, [{ role: "user", content: question }], { maxTokens: 800 });
       setExplanation(res);
     } catch (e) {
       setError(e.message);
