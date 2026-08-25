@@ -3,10 +3,10 @@ import { Brain, Newspaper, PenLine, Trophy, TrendingUp, Target, Flame, Clock } f
 import { EXAMS, EXAM_COLORS } from "../data/exams";
 
 const QUICK_ACTIONS = [
-  { icon: Brain,     label: "Start Quiz",        page: "quiz",            color: "saffron" },
-  { icon: Newspaper, label: "Today's Affairs",   page: "current-affairs", color: "indigo" },
-  { icon: PenLine,   label: "Write Answer",       page: "answer-writing",  color: "emerald" },
-  { icon: Trophy,    label: "Leaderboard",        page: "leaderboard",     color: "amber" },
+  { icon: Brain,     label: "Start Quiz",        page: "quiz",                  color: "saffron" },
+  { icon: Newspaper, label: "Today's Affairs",   page: "daily-current-affairs", color: "indigo" },
+  { icon: PenLine,   label: "Write Answer",       page: "answer-writing",        color: "emerald" },
+  { icon: Trophy,    label: "Leaderboard",        page: "leaderboard",           color: "amber" },
 ];
 
 export default function Dashboard({ onNavigate, userProfile, stats }) {

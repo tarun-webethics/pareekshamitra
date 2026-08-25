@@ -22,7 +22,7 @@ export function setOllamaUrl(url) {
 }
 
 export function getOllamaModel() {
-  return localStorage.getItem("pm_ollama_model") || "llama3.2";
+  return localStorage.getItem("pm_ollama_model") || "llama3.2:3b";
 }
 
 export function setOllamaModel(model) {
@@ -63,7 +63,7 @@ export async function testOllamaConnection(customUrl) {
         ok: false,
         isNoModels: true,
         models: [],
-        error: "Ollama is running, but NO models are installed yet. Run 'ollama pull llama3.2' in terminal.",
+        error: "Ollama is running, but NO models are installed yet. Run 'ollama pull llama3.2:3b' in terminal.",
       };
     }
 
@@ -124,7 +124,7 @@ export async function callOllama(systemPrompt, messages, opts = {}) {
         const tagsData = await tagsRes.json();
         const available = tagsData.models?.map((m) => m.name) || [];
         if (available.length === 0) {
-          msg = `NO models installed in Ollama! Open terminal and run: 'ollama pull llama3.2'`;
+          msg = `NO models installed in Ollama! Open terminal and run: 'ollama pull llama3.2:3b'`;
         } else {
           msg = `Model '${model}' is not installed in Ollama. Installed model(s): [${available.join(", ")}]. Select one of these in Settings!`;
         }

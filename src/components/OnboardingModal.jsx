@@ -127,10 +127,9 @@ export default function OnboardingModal({ onComplete }) {
                   key={ex.id}
                   onClick={() => setExam(ex.name)}
                   className={`p-3 rounded-xl border text-sm font-medium text-left transition-all
-                    ${
-                      exam === ex.name
-                        ? "border-saffron-500/50 bg-saffron-500/10 text-saffron-400"
-                        : "border-white/5 bg-dark-700/40 text-white/50 hover:border-white/10 hover:text-white/70"
+                    ${exam === ex.name
+                      ? "border-saffron-500/50 bg-saffron-500/10 text-saffron-400"
+                      : "border-white/5 bg-dark-700/40 text-white/50 hover:border-white/10 hover:text-white/70"
                     }`}
                 >
                   <span className="text-xl block mb-1">{ex.icon}</span>
@@ -163,22 +162,20 @@ export default function OnboardingModal({ onComplete }) {
               <button
                 type="button"
                 onClick={() => setProviderState("ollama")}
-                className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                  provider === "ollama"
+                className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${provider === "ollama"
                     ? "bg-saffron-500 text-white shadow"
                     : "text-white/50 hover:text-white/80"
-                }`}
+                  }`}
               >
                 <Server size={14} /> Local Ollama
               </button>
               <button
                 type="button"
                 onClick={() => setProviderState("claude")}
-                className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                  provider === "claude"
+                className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${provider === "claude"
                     ? "bg-indigo-500 text-white shadow"
                     : "text-white/50 hover:text-white/80"
-                }`}
+                  }`}
               >
                 <Key size={14} /> Claude API
               </button>
@@ -223,11 +220,10 @@ export default function OnboardingModal({ onComplete }) {
 
                 {ollamaStatus && (
                   <div
-                    className={`p-2.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2 ${
-                      ollamaStatus.ok
+                    className={`p-2.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2 ${ollamaStatus.ok
                         ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                         : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                    }`}
+                      }`}
                   >
                     {ollamaStatus.ok ? <CheckCircle size={14} className="mt-0.5 flex-shrink-0" /> : <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />}
                     <span>{ollamaStatus.message}</span>

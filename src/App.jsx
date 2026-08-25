@@ -4,6 +4,7 @@ import MobileNav from "./components/MobileNav";
 import OnboardingModal from "./components/OnboardingModal";
 import Dashboard from "./pages/Dashboard";
 import Quiz from "./pages/Quiz";
+import DailyCurrentAffairs from "./pages/DailyCurrentAffairs";
 import CurrentAffairs from "./pages/CurrentAffairs";
 import AnswerWriting from "./pages/AnswerWriting";
 import Tutor from "./pages/Tutor";
@@ -15,7 +16,8 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 const PAGE_TITLES = {
   dashboard: "Dashboard",
   quiz: "Smart Quiz",
-  "current-affairs": "Current Affairs",
+  "daily-current-affairs": "Daily Current Affairs",
+  "current-affairs": "AI Study Digest",
   "answer-writing": "Answer Writing Coach",
   tutor: "AI Tutor",
   pyq: "PYQ Solver",
@@ -67,15 +69,16 @@ export default function App() {
   const renderPage = () => {
     const props = { userProfile, stats, onNavigate: navigate, onStatsUpdate: handleStatsUpdate };
     switch (activePage) {
-      case "dashboard":       return <Dashboard {...props} />;
-      case "quiz":            return <Quiz {...props} />;
-      case "current-affairs": return <CurrentAffairs {...props} />;
-      case "answer-writing":  return <AnswerWriting {...props} />;
-      case "tutor":           return <Tutor {...props} />;
-      case "pyq":             return <PYQSolver {...props} />;
-      case "leaderboard":     return <Leaderboard {...props} />;
-      case "settings":        return <SettingsPage {...props} onUpdateProfile={(p) => setUserProfile(p)} />;
-      default:                return <Dashboard {...props} />;
+      case "dashboard":             return <Dashboard {...props} />;
+      case "quiz":                  return <Quiz {...props} />;
+      case "daily-current-affairs": return <DailyCurrentAffairs {...props} />;
+      case "current-affairs":       return <CurrentAffairs {...props} />;
+      case "answer-writing":        return <AnswerWriting {...props} />;
+      case "tutor":                 return <Tutor {...props} />;
+      case "pyq":                   return <PYQSolver {...props} />;
+      case "leaderboard":           return <Leaderboard {...props} />;
+      case "settings":              return <SettingsPage {...props} onUpdateProfile={(p) => setUserProfile(p)} />;
+      default:                      return <Dashboard {...props} />;
     }
   };
 

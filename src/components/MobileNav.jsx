@@ -1,12 +1,12 @@
 import React from "react";
-import { LayoutDashboard, Brain, Newspaper, MessageCircle, Settings } from "lucide-react";
+import { LayoutDashboard, Brain, Globe, MessageCircle, Settings } from "lucide-react";
 
 const NAV = [
-  { id: "dashboard",       icon: LayoutDashboard, label: "Home" },
-  { id: "quiz",            icon: Brain,           label: "Quiz" },
-  { id: "current-affairs", icon: Newspaper,       label: "Affairs" },
-  { id: "tutor",           icon: MessageCircle,   label: "Tutor" },
-  { id: "settings",        icon: Settings,        label: "Settings" },
+  { id: "dashboard",             icon: LayoutDashboard, label: "Home" },
+  { id: "quiz",                  icon: Brain,           label: "Quiz" },
+  { id: "daily-current-affairs", icon: Globe,           label: "Daily News" },
+  { id: "tutor",                 icon: MessageCircle,   label: "Tutor" },
+  { id: "settings",              icon: Settings,        label: "Settings" },
 ];
 
 export default function MobileNav({ activePage, onNavigate }) {

@@ -1,17 +1,18 @@
 import React from "react";
 import {
-  LayoutDashboard, Brain, Newspaper, PenLine, MessageCircle,
+  LayoutDashboard, Brain, Globe, Newspaper, PenLine, MessageCircle,
   BookOpen, Trophy, Settings, ChevronRight, Zap, LogOut
 } from "lucide-react";
 
 const NAV = [
-  { id: "dashboard",      icon: LayoutDashboard, label: "Dashboard" },
-  { id: "quiz",           icon: Brain,           label: "Smart Quiz" },
-  { id: "current-affairs",icon: Newspaper,       label: "Current Affairs" },
-  { id: "answer-writing", icon: PenLine,         label: "Answer Writing" },
-  { id: "tutor",          icon: MessageCircle,   label: "AI Tutor" },
-  { id: "pyq",            icon: BookOpen,        label: "PYQ Solver" },
-  { id: "leaderboard",    icon: Trophy,          label: "Leaderboard" },
+  { id: "dashboard",             icon: LayoutDashboard, label: "Dashboard" },
+  { id: "quiz",                  icon: Brain,           label: "Smart Quiz" },
+  { id: "daily-current-affairs", icon: Globe,           label: "Daily Current Affairs" },
+  { id: "current-affairs",       icon: Newspaper,       label: "AI Study Digest" },
+  { id: "answer-writing",        icon: PenLine,         label: "Answer Writing" },
+  { id: "tutor",                 icon: MessageCircle,   label: "AI Tutor" },
+  { id: "pyq",                   icon: BookOpen,        label: "PYQ Solver" },
+  { id: "leaderboard",           icon: Trophy,          label: "Leaderboard" },
 ];
 
 function handleLogout() {
